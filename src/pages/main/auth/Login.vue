@@ -14,7 +14,6 @@
               outlined
               clearable
               v-model.trim="credentials.username"
-              :placeholder="$t('auth.username')"
             >
               <template v-slot:prepend>
                 <q-icon name="account_circle" />
@@ -64,7 +63,7 @@
               color="primary"
               @click="handleSubmit()"
               v-on:keyup.enter="handleSubmit()"
-              >{{ $t("auth.signin") }}</q-btn
+              >Sign In</q-btn
             >
           </q-card-section>
         </q-form>

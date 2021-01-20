@@ -1,11 +1,11 @@
 const Page404 = () => import("pages/extras/Error404.vue");
-const LoginPage = () => import("pages/main/auth/Login");
-
+const LoginPage = () => import("pages/main/auth/Login.vue");
+const IndexPage = () => import("pages/Index.vue");
 const routes = [
   {
     path: "/",
     component: () => import("layouts/Main.vue"),
-    children: [{ path: "", component: () => import("pages/Index.vue") }]
+    children: [{ path: "/", component: IndexPage }]
   },
   {
     path: "/login",
