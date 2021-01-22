@@ -1,8 +1,8 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import store from "@/store/index";
-
 import routes from "./routes";
+import { isTokenExpired } from "@/utils/auth";
+import axios from "axios";
 
 Vue.use(VueRouter);
 
@@ -23,8 +23,9 @@ Router.beforeEach(async (to, from, next) => {
   const onlyWhenLoggedOut = to.matched.some(
     record => record.meta.onlyWhenLoggedOut
   );
-  console.log({ store });
-  const isLoggedIn = store.getters["auth/isLoggedIn"];
+  //const isLoggedIn = store.getters["auth/isLoggedIn"];
+  const isLoggedIn = !(await isTokenExpired());
+
   console.log({ isLoggedIn });
   if (!isPublic && !isLoggedIn) {
     console.log({ isLoggedIn1: isLoggedIn });

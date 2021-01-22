@@ -73,6 +73,9 @@
 </template>
 
 <script>
+import { AuthService } from "@/services/auth.service";
+import router from "@/router/index";
+
 export default {
   data() {
     return {
@@ -97,13 +100,17 @@ export default {
       //Perform a simple validation that email and password have been typed in
       if (!!this.credentials.username && !!this.credentials.password) {
         //LoadingService.showLoadingHourGlass();
+        console.log({ credentials: this.credentials });
 
-        AuthService.login(this.credentials, res => {
+        AuthService.login(this.credentials, (err, res) => {
           if (res) {
+            console.log("success");
             // LoadingService.hideLoading();
-            this.clearForm();
+            // this.clearForm();
             // NotifyService.showSuccessMessage("Successfully logged in");
+            router.push(router.history.current.query.redirect || "/");
           } else {
+            console.log(err);
             //LoadingService.hideLoading();
             //NotifyService.showErrorMessage("Error in login");
           }

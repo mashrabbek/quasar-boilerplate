@@ -39,7 +39,15 @@ module.exports = function(ctx) {
       vueRouterMode: "history", // available values: 'hash', 'history'
       vueRouterBase: "/",
       showProgress: true,
-
+      env: ctx.dev
+        ? {
+            VUE_APP_BASE_URL: "http://localhost:8000/",
+            TOKEN_KEY: "access_token"
+          }
+        : {
+            // todo change url for prod
+            VUE_APP_BASE_URL: JSON.stringify("http://localhost:8000/")
+          },
       // transpile: false,
 
       // Add dependencies for transpiling with Babel (Array of string/regex)
@@ -103,7 +111,7 @@ module.exports = function(ctx) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ["Cookies"]
     },
     sourceFiles: {
       rootComponent: "src/App.vue",
