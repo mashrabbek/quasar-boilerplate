@@ -3,7 +3,8 @@
  */
 
 const state = {
-  isLoggedIn: false
+  isLoggedIn: false,
+  refreshTokenPromise: null
 };
 
 /**
@@ -13,6 +14,9 @@ const state = {
 const getters = {
   isLoggedIn: state => {
     return state.isLoggedIn;
+  },
+  refreshTokenPromise: state => {
+    return state.refreshTokenPromise;
   }
 };
 
@@ -22,6 +26,9 @@ const getters = {
 const actions = {
   setLoggedIn({ commit }, val) {
     commit("setLoggedIn", val);
+  },
+  refreshTokenPromise({ commit }, promise) {
+    commit("refreshTokenPromise", promise);
   }
 };
 
@@ -31,6 +38,9 @@ const actions = {
 const mutations = {
   setLoggedIn(state, val) {
     state.isLoggedIn = val;
+  },
+  refreshTokenPromise(state, promise) {
+    state.refreshTokenPromise = promise;
   }
 };
 

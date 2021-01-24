@@ -26,11 +26,14 @@ const StorageService = {
     });
   },
   removeCookie(key) {
-    try {
-      Cookies.remove(key);
-    } catch (error) {
-      throw new Error(error);
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        Cookies.remove(key);
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
   },
   replaceCookie(key, value) {
     try {

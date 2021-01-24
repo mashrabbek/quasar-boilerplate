@@ -2,7 +2,6 @@ import store from "@/store/index";
 import ApiService from "@/services/api.service";
 import StorageService from "@/services/storage.service";
 import DataService from "@/services/data.service";
-
 class AuthenticationError extends Error {
   constructor(errorCode, message) {
     super(message);
@@ -19,8 +18,17 @@ const AuthService = {
     this.authenticate(credentials)
       .then(
         async token => {
-          // get menus, etc..
-          await DataService.loadAll(token);
+          // set cookie value
+          StorageService.setCookie(
+            process.env.TOKEN_KEY,
+            response.data.access_token
+          );
+          // set axios header
+          ApiService.setHeader(token);
+          // mount interceptor
+          ApiService.mount401Interceptor();
+          // load user data
+          await DataService.loadAll();
 
           callback(null, true);
         },
@@ -41,15 +49,9 @@ const AuthService = {
         url: "/int/auth/login",
         data: credentials
       };
-
       try {
         const response = await ApiService.customRequest(requestData);
         if (response.data.status == 1) {
-          StorageService.setCookie(
-            process.env.TOKEN_KEY,
-            response.data.access_token
-          );
-          ApiService.setHeader(response.data.access_token);
           resolve(response.data.access_token);
         } else {
           reject(response.data.message);
@@ -65,33 +67,24 @@ const AuthService = {
     //sessionStorage.clear();
     //LoadingService.showLoadingDots();
     try {
+      let token = await StorageService.getCookieByKey(process.env.TOKEN_KEY);
+      // remove cookie
+      await StorageService.removeCookie(process.env.TOKEN_KEY);
+      // remove axios header
+      ApiService.removeHeader();
+      // unmount interceptor
       ApiService.unmount401Interceptor();
 
-      //   await this.clearTokenFromCache(store.getters["auth/token"])
-      //     .then(
-      //       result => {
-      //         console.log("token cleared");
-      //       },
-      //       error => {
-      //         console.error(error);
-      //       }
-      //     )
-      //     .catch(err => {
-      //       console.error(err);
-      //       throw err;
-      //     });
+      //TODO clear token from cache
+      await ApiService.customRequest({
+        method: "delete",
+        url: "/int/auth/token",
+        data: { accessToken: token }
+      });
+      // set isLoaded false
+      store.dispatch("userdata/setAllLoaded", false);
 
-      ApiService.removeHeader();
-
-      //await MainService.clearStorage();
-
-      //store.dispatch("dicts/setIsAllSet", false);
-
-      //store.dispatch("auth/logoutSuccess");
-
-      //   if (!(await TokenService.isTokenExist())) {
-      //     router.push("/login");
-      //   }
+      router.push("/login");
     } catch (error) {
       console.log({
         "Error in logout": error
@@ -111,7 +104,7 @@ const AuthService = {
       p.then(
         response => {
           store.dispatch("auth/refreshTokenPromise", null);
-          store.dispatch("auth/loginSuccess", response);
+          //store.dispatch("auth/loginSuccess", response);
         },
         error => {
           store.dispatch("auth/refreshTokenPromise", null);
@@ -127,11 +120,13 @@ const AuthService = {
 
   // refresh Token
   refreshAccessToken: async function() {
-    const accessToken = await TokenService.getToken(); //  get accesToken from cookie
+    const accessToken = await StorageService.getCookieByKey(
+      process.env.TOKEN_KEY
+    ); //  get accesToken from cookie
 
     const requestData = {
       method: "post",
-      url: "auth/token",
+      url: "int/auth/token",
       data: {
         accessToken: accessToken
       }
@@ -139,12 +134,17 @@ const AuthService = {
 
     try {
       const response = await ApiService.customRequest(requestData);
-      if (await TokenService.isTokenExist()) {
-        TokenService.removeToken();
+
+      if (await StorageService.isCookieExist(process.env.TOKEN_KEY)) {
+        StorageService.removeCookie(process.env.TOKEN_KEY);
         console.log("token cleared");
       }
+
       console.log("storing token...");
-      TokenService.saveToken(response.data.access_token);
+      StorageService.setCookie(
+        process.env.TOKEN_KEY,
+        response.data.access_token
+      );
       //TokenService.saveRefreshToken(response.data.refresh_token)
       // Update the header in ApiService
       ApiService.setHeader(response.data.access_token);
@@ -155,97 +155,6 @@ const AuthService = {
         error.response.status,
         error.response.data.detail
       );
-    }
-  },
-  async clearTokenFromCache(token) {
-    return new Promise(async (res, rej) => {
-      const requestData = {
-        method: "delete",
-        url: "auth/token",
-        data: {
-          token: token
-        }
-      };
-      try {
-        ApiService.customRequest(requestData).then(
-          result => {
-            res(result);
-          },
-          error => {
-            reject(error);
-          }
-        );
-      } catch (error) {
-        rej(
-          new AuthenticationError(
-            error.response.status,
-            error.response.data.detail
-          )
-        );
-        throw new AuthenticationError(
-          error.response.status,
-          error.response.data.detail
-        );
-      }
-    });
-  },
-  remoteLogin: async function(emp_id, callback) {
-    let empId = CommonUtils.valueOf(emp_id);
-
-    if (empId) {
-      if (empId == -1) {
-        // if wanted to go back
-        let admin_token = await TokenService.getKey("admin_token");
-
-        // if admin_token not exist then there was no remote access
-        if (admin_token == null) {
-          callback(false);
-        } else {
-          // otherwise there have been remote acesses so clear to return back
-          TokenService.replaceToken(admin_token);
-          TokenService.removeKey("admin_token");
-          TokenService.removeKey("menus");
-          callback(true);
-        }
-      } else {
-        // if tried to remote access
-
-        const requestData = {
-          method: "post",
-          url: "auth/remoteLogin",
-          data: {
-            emp_id: empId
-          }
-        };
-
-        try {
-          const resp = await ApiService.customRequest(requestData);
-          console.log(resp.data);
-
-          if (resp.data.status == 1) {
-            let token = resp.data.access_token;
-            let adminKey = await TokenService.getKey("admin_token");
-            if (adminKey == null) {
-              TokenService.setKey("admin_token", await TokenService.getToken());
-            }
-            TokenService.replaceToken(token);
-            TokenService.removeKey("menus");
-            callback(true);
-          } else {
-            callback(null);
-          }
-        } catch (error) {
-          console.error("Error occured !!!");
-          callback(null);
-
-          throw new AuthenticationError(
-            error.response.status,
-            error.response.data.detail
-          );
-        }
-      }
-    } else {
-      NotifyService.showErrorMessage("erronous input");
     }
   }
 };
