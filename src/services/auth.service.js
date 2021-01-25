@@ -2,6 +2,8 @@ import store from "@/store/index";
 import ApiService from "@/services/api.service";
 import StorageService from "@/services/storage.service";
 import DataService from "@/services/data.service";
+import router from "@/router/index";
+
 class AuthenticationError extends Error {
   constructor(errorCode, message) {
     super(message);
@@ -52,6 +54,13 @@ const AuthService = {
       // remove cookie
       await StorageService.removeCookie(process.env.TOKEN_KEY);
       console.log("remove axios header");
+
+      let resp = await ApiService.customRequest({
+        method: "delete",
+        url: "/int/auth/token",
+        data: { accessToken: token }
+      });
+
       // remove axios header
       ApiService.removeHeader();
       console.log("unmount interceptor");
@@ -59,16 +68,11 @@ const AuthService = {
       ApiService.unmount401Interceptor();
 
       console.log("clear token from cache");
-      //TODO clear token from cache
-      let resp = await ApiService.customRequest({
-        method: "delete",
-        url: "/int/auth/token",
-        data: { accessToken: token }
-      });
       console.log({ resp });
       // set isLoaded false
       store.dispatch("userdata/setAllLoaded", false);
       console.log("set isLoaded false an push");
+
       router.push("/login");
     } catch (error) {
       console.log({

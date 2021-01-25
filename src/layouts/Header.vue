@@ -11,15 +11,24 @@
       />
 
       <q-toolbar-title>
-        Quasar App
+        Insurance App
       </q-toolbar-title>
 
-      <div>Quasar v</div>
+      <div>Logout</div>
+      <q-btn
+        flat
+        class="icon-color"
+        dense
+        icon="exit_to_app"
+        size="16px"
+        @click="logout()"
+      />
     </q-toolbar>
   </q-header>
 </template>
 
 <script>
+import { AuthService } from "@/services/auth.service";
 export default {
   computed: {
     isLeftDrawerOpen: {
@@ -29,6 +38,12 @@ export default {
       set(val) {
         this.$store.dispatch("layout/setLeftDrawerOpen", val);
       }
+    }
+  },
+  methods: {
+    logout() {
+      console.log("logout");
+      AuthService.logout();
     }
   }
 };
