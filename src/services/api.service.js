@@ -42,7 +42,6 @@ const ApiService = {
    *    - password
    **/
   customRequest(data) {
-    console.log({ def: axios.defaults });
     return axios(data);
   },
 

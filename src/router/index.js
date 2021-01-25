@@ -2,9 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import routes from "./routes";
 import { isTokenExpired } from "@/utils/auth";
-import DataService from "@/services/data.service";
 import store from "@/store/index";
-import StorageService from "src/services/storage.service";
 import { AuthService } from "src/services/auth.service";
 
 Vue.use(VueRouter);
@@ -32,6 +30,8 @@ Router.beforeEach(async (to, from, next) => {
 
   console.log({ isPublic, onlyWhenLoggedOut, isLoggedIn, isAllLoaded });
 
+  // if not public page and not authenticated
+
   if (!isPublic && !isLoggedIn) {
     console.log({ isLoggedIn: isLoggedIn });
 
@@ -42,26 +42,20 @@ Router.beforeEach(async (to, from, next) => {
       } // Store the full path to redirect the user to after login
     });
   }
+
   // if refresh happens
   if (isLoggedIn && !isAllLoaded) {
     try {
       // refreshPage
-      // await DataService.loadAll();
+      await AuthService.refreshPage();
     } catch (error) {
       console.log({ error });
-
       await AuthService.logout();
-
-      // return next({
-      //   path: "/login",
-      //   query: {
-      //     redirect: to.fullPath
-      //   } // Store the full path to redirect the user to after login
-      // });
     }
   }
 
   //!!! Don't Change
+  // after first time login
   if (isLoggedIn && onlyWhenLoggedOut) {
     return next("/");
   }

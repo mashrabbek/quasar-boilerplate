@@ -19,14 +19,15 @@ const AuthService = {
       .then(
         async token => {
           // set cookie value
-          StorageService.setCookie(
-            process.env.TOKEN_KEY,
-            response.data.access_token
-          );
+          console.log("set cookie value");
+          StorageService.setCookie(process.env.TOKEN_KEY, token);
+          console.log("set axios header");
           // set axios header
           ApiService.setHeader(token);
+          console.log("mount interceptor");
           // mount interceptor
           ApiService.mount401Interceptor();
+          console.log("load user data");
           // load user data
           await DataService.loadAll();
 
@@ -40,6 +41,57 @@ const AuthService = {
       .catch(error => {
         callback(error, false);
       });
+  },
+
+  logout: async function() {
+    //sessionStorage.clear();
+    //LoadingService.showLoadingDots();
+    try {
+      let token = await StorageService.getCookieByKey(process.env.TOKEN_KEY);
+      console.log("remove cookie");
+      // remove cookie
+      await StorageService.removeCookie(process.env.TOKEN_KEY);
+      console.log("remove axios header");
+      // remove axios header
+      ApiService.removeHeader();
+      console.log("unmount interceptor");
+      // unmount interceptor
+      ApiService.unmount401Interceptor();
+
+      console.log("clear token from cache");
+      //TODO clear token from cache
+      let resp = await ApiService.customRequest({
+        method: "delete",
+        url: "/int/auth/token",
+        data: { accessToken: token }
+      });
+      console.log({ resp });
+      // set isLoaded false
+      store.dispatch("userdata/setAllLoaded", false);
+      console.log("set isLoaded false an push");
+      router.push("/login");
+    } catch (error) {
+      console.log({
+        "Error in logout": error
+      });
+      throw error;
+    }
+  },
+
+  async refreshPage() {
+    console.log("refreshing page..");
+    let token = await StorageService.getCookieByKey(process.env.TOKEN_KEY);
+    console.log(" set axios header");
+    // set axios header
+    ApiService.setHeader(token);
+    console.log("mount interceptor");
+    // mount interceptor
+    ApiService.mount401Interceptor();
+    console.log("load user data");
+    // load user data
+    await DataService.loadAll();
+
+    return;
   },
 
   authenticate: function(credentials) {
@@ -61,36 +113,6 @@ const AuthService = {
         reject(error);
       }
     });
-  },
-
-  logout: async function() {
-    //sessionStorage.clear();
-    //LoadingService.showLoadingDots();
-    try {
-      let token = await StorageService.getCookieByKey(process.env.TOKEN_KEY);
-      // remove cookie
-      await StorageService.removeCookie(process.env.TOKEN_KEY);
-      // remove axios header
-      ApiService.removeHeader();
-      // unmount interceptor
-      ApiService.unmount401Interceptor();
-
-      //TODO clear token from cache
-      await ApiService.customRequest({
-        method: "delete",
-        url: "/int/auth/token",
-        data: { accessToken: token }
-      });
-      // set isLoaded false
-      store.dispatch("userdata/setAllLoaded", false);
-
-      router.push("/login");
-    } catch (error) {
-      console.log({
-        "Error in logout": error
-      });
-      throw error;
-    }
   },
 
   refreshToken() {
@@ -145,7 +167,7 @@ const AuthService = {
         process.env.TOKEN_KEY,
         response.data.access_token
       );
-      //TokenService.saveRefreshToken(response.data.refresh_token)
+
       // Update the header in ApiService
       ApiService.setHeader(response.data.access_token);
 

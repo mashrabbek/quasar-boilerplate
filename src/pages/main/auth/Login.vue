@@ -26,7 +26,6 @@
               outlined
               clearable
               v-model="credentials.password"
-              :placeholder="$t('auth.password')"
               v-on:keyup.enter="handleSubmit()"
               :type="showPass ? 'text' : 'password'"
             >

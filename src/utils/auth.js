@@ -10,6 +10,8 @@ function isTokenExpired() {
         );
         if (decodedToken) {
           if (Math.floor(Date.now() / 1000) > decodedToken.life_time) {
+            // removes expired cookie in app cookie storage
+            await StorageService.removeCookie(process.env.TOKEN_KEY);
             res(true);
           } else {
             res(false);
