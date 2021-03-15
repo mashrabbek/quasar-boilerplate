@@ -1,6 +1,5 @@
-# Insurance24/7 (insurance-front)
-
-Front UI Insurance
+# Quasar boilerplate app with Jwt authorization
+# Ready to use user profile configuration by creating users, menus and role
 
 ## Install the dependencies
 ```bash
