@@ -28,8 +28,6 @@ Router.beforeEach(async (to, from, next) => {
   const isLoggedIn = !(await isTokenExpired());
   const isAllLoaded = store.getters["userdata/isAllLoaded"];
 
-  console.log({ isPublic, onlyWhenLoggedOut, isLoggedIn, isAllLoaded });
-
   // if not public page and not authenticated
 
   if (!isPublic && !isLoggedIn) {

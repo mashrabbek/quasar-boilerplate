@@ -11,7 +11,7 @@
       />
 
       <q-toolbar-title>
-        Insurance App
+        Quasar App
       </q-toolbar-title>
 
       <div>Logout</div>

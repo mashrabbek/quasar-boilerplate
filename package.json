@@ -1,8 +1,8 @@
 {
-  "name": "insurance-front",
+  "name": "quasar-app",
   "version": "0.0.1",
-  "description": "Front UI Insurance",
-  "productName": "Insurance24/7",
+  "description": "Front UI ",
+  "productName": "quasar",
   "author": "mashrabjon <akbarov.dev@gmail.com>",
   "private": true,
   "scripts": {
